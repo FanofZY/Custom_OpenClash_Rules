@@ -1,0 +1,59 @@
+name: Sync upstream and build personal rules
+
+on:
+  schedule:
+    - cron: '23 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: personal-rules-writer
+  cancel-in-progress: false
+
+jobs:
+  sync-and-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout personal branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: personal
+          fetch-depth: 0
+
+      - name: Fetch upstream and origin branches
+        run: |
+          set -euo pipefail
+          git remote add upstream https://github.com/Aethersailor/Custom_OpenClash_Rules.git ||
+            git remote set-url upstream https://github.com/Aethersailor/Custom_OpenClash_Rules.git
+          git fetch --no-tags upstream main
+          git fetch --no-tags origin main personal
+
+      - name: Build and verify personal outputs
+        run: |
+          set -euo pipefail
+          python py/build_personal_rules.py
+          python py/build_personal_rules.py --check
+
+      - name: Publish personal outputs
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -- dist
+          if git diff --cached --quiet; then
+            echo "Personal outputs are already current."
+          else
+            git commit -m "chore(rules): refresh personal rule outputs"
+            git push origin HEAD:personal
+          fi
+
+      - name: Fast-forward mirror branch
+        run: |
+          set -euo pipefail
+          expected_main="$(git rev-parse origin/main)"
+          git push \
+            --force-with-lease="refs/heads/main:${expected_main}" \
+            origin upstream/main:main
