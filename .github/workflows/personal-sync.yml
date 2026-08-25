@@ -1,8 +1,17 @@
 name: Sync upstream and build personal rules
 
 on:
+  push:
+    branches:
+      - personal
+    paths:
+      - 'custom/**'
+      - 'py/build_personal_rules.py'
+      - 'py/test_personal_rules.py'
+      - '.github/workflows/personal-sync.yml'
   schedule:
-    - cron: '23 */6 * * *'
+    # Once per day at 02:23 UTC (10:23 Asia/Shanghai).
+    - cron: '23 2 * * *'
   workflow_dispatch:
 
 permissions:
