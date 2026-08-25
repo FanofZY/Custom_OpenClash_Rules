@@ -1,7 +1,6 @@
 # Personal rules inserted before every upstream rule.
 # Format: KIND,VALUE,POLICY
 
-DOMAIN-SUFFIX,163.com,DIRECT
 DOMAIN-SUFFIX,clarivate.com,DIRECT
 DOMAIN-SUFFIX,cloudflare.com,DIRECT
 DOMAIN-SUFFIX,maj-soul.com,DIRECT
