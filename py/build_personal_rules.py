@@ -18,6 +18,7 @@ CUSTOM_FILES = {
     "proxy": Path("custom/Custom_Proxy.list"),
     "reject": Path("custom/Custom_Reject.list"),
 }
+PREPEND_FILE = Path("custom/Custom_Prepend.list")
 UPSTREAM_RULES = {
     "direct": "rule/Custom_Direct.list",
     "proxy": "rule/Custom_Proxy.list",
@@ -49,6 +50,18 @@ class Rule:
     kind: str
     value: str
     rendered: str
+
+    @property
+    def key(self) -> tuple[str, str]:
+        return self.kind, self.value.casefold()
+
+
+@dataclass(frozen=True)
+class PolicyRule:
+    kind: str
+    value: str
+    rendered: str
+    policy: str
 
     @property
     def key(self) -> tuple[str, str]:
@@ -122,6 +135,59 @@ def parse_rules(content: str, source: str) -> list[Rule]:
     return rules
 
 
+def parse_prepend_rules(
+    content: str, source: str
+) -> tuple[list[PolicyRule], int]:
+    """Parse full Clash rules, preserving their third-column policy."""
+    rules: list[PolicyRule] = []
+    owners: dict[tuple[str, str], str] = {}
+    duplicates_removed = 0
+    for line_number, raw_line in enumerate(content.splitlines(), 1):
+        stripped = raw_line.strip()
+        if not stripped or stripped.startswith(("#", ";")):
+            continue
+
+        parts = [part.strip() for part in stripped.split(",")]
+        has_no_resolve = (
+            len(parts) == 4 and parts[3].casefold() == "no-resolve"
+        )
+        if len(parts) != 3 and not has_no_resolve:
+            raise ValueError(
+                f"{source}:{line_number}: expected KIND,VALUE,POLICY: "
+                f"{stripped}"
+            )
+        base = parse_rules(
+            f"{parts[0]},{parts[1]}\n", f"{source}:{line_number}"
+        )[0]
+        if has_no_resolve and base.kind not in {"IP-CIDR", "IP-CIDR6"}:
+            raise ValueError(
+                f"{source}:{line_number}: no-resolve is only valid for CIDR rules"
+            )
+        policy = parts[2]
+        if not policy:
+            raise ValueError(f"{source}:{line_number}: empty policy")
+
+        previous = owners.get(base.key)
+        if previous is not None:
+            if previous == policy:
+                duplicates_removed += 1
+                continue
+            raise ValueError(
+                f"{source}:{line_number}: {base.kind},{base.value} already "
+                f"uses policy {previous}"
+            )
+        owners[base.key] = policy
+        rules.append(
+            PolicyRule(
+                kind=base.kind,
+                value=base.value,
+                rendered=base.rendered,
+                policy=policy,
+            )
+        )
+    return rules, duplicates_removed
+
+
 def load_custom_rules(root: Path) -> dict[str, list[Rule]]:
     result: dict[str, list[Rule]] = {}
     owners: dict[tuple[str, str], str] = {}
@@ -182,13 +248,51 @@ def provider_url(repository: str, branch: str, filename: str) -> str:
     )
 
 
+def proxy_groups(lines: list[str]) -> set[str]:
+    groups: set[str] = set()
+    for line in lines:
+        if not line.startswith("custom_proxy_group="):
+            continue
+        definition = line.split("=", 1)[1]
+        groups.add(definition.split("`", 1)[0])
+    return groups
+
+
+def resolve_policy(policy: str, groups: set[str]) -> str:
+    main_proxy = next(
+        (name for name in ("🚀 手动选择", "🚀 故障转移") if name in groups),
+        None,
+    )
+    if policy == "DIRECT":
+        return "🎯 全球直连"
+    if policy == "REJECT":
+        return "REJECT"
+    if policy == "PROXY":
+        if main_proxy is None:
+            raise ValueError("template has no main proxy group")
+        return main_proxy
+    if policy in groups:
+        return policy
+    if policy in {
+        "🚀 手动选择",
+        "🚀 故障转移",
+        "🇯🇵 日本节点",
+        "🇺🇸 美国节点",
+    } and main_proxy is not None:
+        return main_proxy
+    raise ValueError(f"template does not define policy group: {policy}")
+
+
 def patch_template(
     content: str,
     repository: str,
     branch: str,
     include_reject: bool,
+    prepend_rules: list[PolicyRule] | None = None,
 ) -> str:
     lines = [line.rstrip() for line in content.splitlines()]
+    groups = proxy_groups(lines)
+    main_proxy = resolve_policy("PROXY", groups) if groups else "🚀 手动选择"
     replacements = {
         "direct": (
             "Custom_Direct_Domain.mrs",
@@ -233,7 +337,7 @@ def patch_template(
                     if "Personal_Direct_Classical.yaml" in line
                 )
                 insert_at = anchor + 1
-                group = "ruleset=🚀 手动选择"
+                group = f"ruleset={main_proxy}"
             lines.insert(insert_at, f"{group},clash-classic:{url},28800")
             continue
         if len(indexes) != 2:
@@ -262,6 +366,22 @@ def patch_template(
             f"ruleset=REJECT,clash-classic:{reject_url},28800",
         )
 
+    if prepend_rules:
+        first_ruleset = next(
+            index
+            for index, line in enumerate(lines)
+            if line.startswith("ruleset=")
+        )
+        rendered = [
+            f"ruleset={resolve_policy(rule.policy, groups)},[]{rule.rendered}"
+            for rule in prepend_rules
+        ]
+        lines[first_ruleset:first_ruleset] = [
+            "; Personal prepend rules (kept ahead of upstream rules).",
+            *rendered,
+            "",
+        ]
+
     banner = (
         "; Personal build generated from the current upstream template.\n"
         f"; Repository: https://github.com/{repository}/tree/{branch}\n"
@@ -277,6 +397,10 @@ def expected_outputs(
 ) -> dict[Path, str]:
     upstream_sha = git_output(root, "rev-parse", upstream_ref).strip()
     personal = load_custom_rules(root)
+    prepend_rules, duplicates_removed = parse_prepend_rules(
+        (root / PREPEND_FILE).read_text(encoding="utf-8-sig"),
+        PREPEND_FILE.as_posix(),
+    )
     claimed = {rule.key for rules in personal.values() for rule in rules}
     upstream_rules = {
         policy: parse_rules(
@@ -307,6 +431,7 @@ def expected_outputs(
             repository,
             branch,
             include_reject=bool(personal["reject"]),
+            prepend_rules=prepend_rules,
         )
 
     manifest = {
@@ -320,6 +445,10 @@ def expected_outputs(
                 "published": len(merged[policy]),
             }
             for policy in ("direct", "proxy", "reject")
+        },
+        "prepend": {
+            "published": len(prepend_rules),
+            "duplicates_removed": duplicates_removed,
         },
     }
     outputs[Path("dist/manifest.json")] = (
