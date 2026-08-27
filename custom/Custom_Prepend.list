@@ -6,6 +6,7 @@ DOMAIN-SUFFIX,cloudflare.com,DIRECT
 DOMAIN-SUFFIX,maj-soul.com,DIRECT
 DOMAIN-SUFFIX,majsoul-hk-client.cn-hongkong.log.aliyuncs.com,DIRECT
 DOMAIN-SUFFIX,msftconnecttest.com,DIRECT
+DOMAIN-SUFFIX,microsoftpersonalcontent.com,DIRECT
 DOMAIN-SUFFIX,webofknowledge.com,DIRECT
 DOMAIN-SUFFIX,webofscience.com,DIRECT
 DOMAIN-SUFFIX,wiley.com,DIRECT
