@@ -59,10 +59,25 @@ jobs:
             git push origin HEAD:personal
           fi
 
-      - name: Fast-forward mirror branch
+      - name: Update mirror branch while preserving workflows
         run: |
           set -euo pipefail
           expected_main="$(git rev-parse origin/main)"
+          git switch --detach upstream/main
+          # GITHUB_TOKEN cannot update files under .github/workflows. Keep the
+          # fork's existing workflow tree while mirroring all other upstream
+          # content, so rule updates do not require a separate PAT.
+          git restore \
+            --source=origin/main \
+            --staged \
+            --worktree \
+            -- .github/workflows
+          if git diff --cached --quiet; then
+            mirror_ref="upstream/main"
+          else
+            git commit -m "chore(sync): mirror upstream except workflows"
+            mirror_ref="HEAD"
+          fi
           git push \
             --force-with-lease="refs/heads/main:${expected_main}" \
-            origin upstream/main:main
+            origin "${mirror_ref}:main"
