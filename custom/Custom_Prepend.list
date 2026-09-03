@@ -78,3 +78,14 @@ DOMAIN-SUFFIX,seesaawiki.jp,🇯🇵 日本节点
 DOMAIN-SUFFIX,tokyo-hot.com,🇯🇵 日本节点
 DOMAIN-SUFFIX,docker.com,🇺🇸 美国节点
 DOMAIN-SUFFIX,docker.io,🇺🇸 美国节点
+
+# Telegram IPv4
+IP-CIDR,149.154.160.0/20,🚀 手动选择,no-resolve
+IP-CIDR,185.76.151.0/24,🚀 手动选择,no-resolve
+IP-CIDR,91.105.192.0/23,🚀 手动选择,no-resolve
+IP-CIDR,91.108.4.0/22,🚀 手动选择,no-resolve
+IP-CIDR,91.108.8.0/22,🚀 手动选择,no-resolve
+IP-CIDR,91.108.12.0/22,🚀 手动选择,no-resolve
+IP-CIDR,91.108.16.0/22,🚀 手动选择,no-resolve
+IP-CIDR,91.108.20.0/22,🚀 手动选择,no-resolve
+IP-CIDR,91.108.56.0/22,🚀 手动选择,no-resolve
