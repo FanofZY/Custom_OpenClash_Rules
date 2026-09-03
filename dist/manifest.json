@@ -2,11 +2,11 @@
   "repository": "FanofZY/Custom_OpenClash_Rules",
   "branch": "personal",
   "upstream_repository": "Aethersailor/Custom_OpenClash_Rules",
-  "upstream_revision": "9d2c6c3c2926f84a14805cb935fc10182eca1fd2",
+  "upstream_revision": "e85042b9f751537f9b7b1e095ed2495082c51644",
   "counts": {
     "direct": {
       "personal": 0,
-      "published": 815
+      "published": 816
     },
     "proxy": {
       "personal": 0,
@@ -18,7 +18,7 @@
     }
   },
   "prepend": {
-    "published": 76,
+    "published": 85,
     "duplicates_removed": 0
   }
 }
