@@ -42,6 +42,7 @@ DOMAIN-SUFFIX,wikidata.org,🚀 手动选择
 # BrownDust2: game API/maintenance, launcher, official services and CDN.
 DOMAIN-SUFFIX,bd2.pmang.cloud,🇯🇵 日本节点
 DOMAIN-SUFFIX,bd2-cdn.akamaized.net,🇯🇵 日本节点
+DOMAIN,global.neonapi.com,🇯🇵 日本节点
 DOMAIN-SUFFIX,browndust2.app,🇯🇵 日本节点
 DOMAIN-SUFFIX,browndust2.com,🇯🇵 日本节点
 DOMAIN-SUFFIX,browndust2.global,🇯🇵 日本节点
