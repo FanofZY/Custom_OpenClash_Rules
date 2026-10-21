@@ -97,9 +97,6 @@ class PersonalRulesTest(unittest.TestCase):
         self.assertLess(custom, upstream)
 
     def test_missing_country_group_falls_back_to_main_proxy(self) -> None:
-        rules, _ = parse_prepend_rules(
-            "DOMAIN-SUFFIX,example.com,🇺🇸 美国节点\n", "custom"
-        )
         source = "\n".join(
             (
                 "[custom]",
@@ -108,13 +105,28 @@ class PersonalRulesTest(unittest.TestCase):
                 "custom_proxy_group=🚀 故障转移`fallback`.*",
             )
         )
-        result = patch_template(
-            source, "owner/repo", "personal", False, prepend_rules=rules
+        policies = (
+            "🇭🇰 香港节点",
+            "🇯🇵 日本节点",
+            "🇺🇸 美国节点",
+            "🇸🇬 新加坡节点",
+            "🇼🇸 台湾节点",
+            "🇰🇷 韩国节点",
         )
 
-        self.assertIn(
-            "ruleset=🚀 故障转移,[]DOMAIN-SUFFIX,example.com", result
-        )
+        for policy in policies:
+            with self.subTest(policy=policy):
+                rules, _ = parse_prepend_rules(
+                    f"DOMAIN-SUFFIX,example.com,{policy}\n", "custom"
+                )
+                result = patch_template(
+                    source, "owner/repo", "personal", False, prepend_rules=rules
+                )
+
+                self.assertIn(
+                    "ruleset=🚀 故障转移,[]DOMAIN-SUFFIX,example.com",
+                    result,
+                )
 
 
 if __name__ == "__main__":

@@ -276,8 +276,12 @@ def resolve_policy(policy: str, groups: set[str]) -> str:
     if policy in {
         "🚀 手动选择",
         "🚀 故障转移",
+        "🇭🇰 香港节点",
         "🇯🇵 日本节点",
         "🇺🇸 美国节点",
+        "🇸🇬 新加坡节点",
+        "🇼🇸 台湾节点",
+        "🇰🇷 韩国节点",
     } and main_proxy is not None:
         return main_proxy
     raise ValueError(f"template does not define policy group: {policy}")
