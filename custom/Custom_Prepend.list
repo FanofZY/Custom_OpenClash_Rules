@@ -41,6 +41,11 @@ DOMAIN-SUFFIX,redgifs.com,🚀 手动选择
 DOMAIN-SUFFIX,rutracker.org,🚀 手动选择
 DOMAIN-SUFFIX,toomics.com,🚀 手动选择
 DOMAIN-SUFFIX,wikidata.org,🚀 手动选择
+
+# warframe
+DOMAIN-SUFFIX,origin.warframe.com,🇭🇰 香港节点
+DOMAIN-SUFFIX,api.warframe.com,🇭🇰 香港节点
+
 # BrownDust2: game API/maintenance, launcher, official services and CDN.
 DOMAIN-SUFFIX,bd2.pmang.cloud,🇯🇵 日本节点
 DOMAIN-SUFFIX,bd2-cdn.akamaized.net,🇯🇵 日本节点
@@ -79,6 +84,8 @@ DOMAIN-SUFFIX,prestige-av.com,🇯🇵 日本节点
 DOMAIN-SUFFIX,s1s1s1.com,🇯🇵 日本节点
 DOMAIN-SUFFIX,seesaawiki.jp,🇯🇵 日本节点
 DOMAIN-SUFFIX,tokyo-hot.com,🇯🇵 日本节点
+
+# docker
 DOMAIN-SUFFIX,docker.com,🇺🇸 美国节点
 DOMAIN-SUFFIX,docker.io,🇺🇸 美国节点
 
